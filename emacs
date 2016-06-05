@@ -13,6 +13,14 @@
 (setq gambit-repl-command-prefix "\e")
 (require 'gambit)
 
+(setq
+   backup-by-copying t      ; don't clobber symlinks
+   backup-directory-alist '(("." . "~/.emacs-saves"))    ; don't litter my fs tree
+   delete-old-versions t
+   kept-new-versions 6
+   kept-old-versions 2
+   version-control t)       ; use versioned backups
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -63,7 +71,63 @@
 
 (cua-mode t)
 (setq org-support-shift-select 1)
+(setq org-startup-indented t)
 (visual-line-mode t)
+
+(defun delete-word (arg)
+  "Delete characters forward until encountering the end of a word.
+With argument, do this that many times."
+  (interactive "p")
+  (delete-region (point) (progn (forward-word arg) (point))))
+
+(defun backward-delete-word (arg)
+  "Delete characters backward until encountering the end of a word.
+With argument, do this that many times."
+  (interactive "p")
+  (delete-word (- arg)))
+
+(global-set-key (kbd "M-DEL") 'backward-delete-word)
+
+;; Hmm
+(dolist (cmd '(delete-word backward-delete-word))
+  (put cmd 'CUA 'move))
+
+;;(read-kbd-macro "<M-DEL>")
+;;(global-set-key  'move-text-up)
+
+(defun move-text-internal (arg)
+   (cond
+    ((and mark-active transient-mark-mode)
+     (if (> (point) (mark))
+            (exchange-point-and-mark))
+     (let ((column (current-column))
+              (text (delete-and-extract-region (point) (mark))))
+       (forward-line arg)
+       (move-to-column column t)
+       (set-mark (point))
+       (insert text)
+       (exchange-point-and-mark)
+       (setq deactivate-mark nil)))
+    (t
+     (beginning-of-line)
+     (when (or (> arg 0) (not (bobp)))
+       (forward-line)
+       (when (or (< arg 0) (not (eobp)))
+            (transpose-lines arg))
+       (forward-line -1)))))
+
+(defun move-text-down (arg)
+   "Move region (transient-mark-mode active) or current line arg lines down."
+   (interactive "*p")
+   (move-text-internal arg))
+
+(defun move-text-up (arg)
+   "Move region (transient-mark-mode active) or current line arg lines up."
+   (interactive "*p")
+   (move-text-internal (- arg)))
+
+(global-set-key (kbd "M-<up>") 'move-text-up)
+(global-set-key (kbd "M-<down>") 'move-text-down)
 
 (column-number-mode t)
 (global-linum-mode)
@@ -79,8 +143,10 @@
 (setq web-mode-script-padding 4)
 
 (ac-config-default)
+
 ;(add-to-list 'ac-dictionnary-directories "~/.emacs.d/elpa/auto-complete-20160107.8/dict")
 (global-auto-complete-mode t)
+(setq ac-ignore-case 0)
 
 (setq fci-rule-column 80)
 
