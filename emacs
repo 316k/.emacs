@@ -72,27 +72,8 @@
 (cua-mode t)
 (setq org-support-shift-select 1)
 (setq org-startup-indented t)
-(visual-line-mode t)
+(global-visual-line-mode t)
 
-(defun delete-word (arg)
-  "Delete characters forward until encountering the end of a word.
-With argument, do this that many times."
-  (interactive "p")
-  (delete-region (point) (progn (forward-word arg) (point))))
-
-(defun backward-delete-word (arg)
-  "Delete characters backward until encountering the end of a word.
-With argument, do this that many times."
-  (interactive "p")
-  (delete-word (- arg)))
-
-(global-set-key (kbd "M-DEL") 'backward-delete-word)
-
-;; Hmm
-(dolist (cmd '(delete-word backward-delete-word))
-  (put cmd 'CUA 'move))
-
-;;(read-kbd-macro "<M-DEL>")
 ;;(global-set-key  'move-text-up)
 
 (defun move-text-internal (arg)
@@ -135,12 +116,20 @@ With argument, do this that many times."
 ;(global-hl-line-mode t)
 
 (setq-default c-default-style "linux"
-			  c-basic-offset 4
-			  tab-width 4
+              c-basic-offset 4
+              tab-width 4
               indent-tabs-mode nil)
 
 (setq web-mode-style-padding 4)
 (setq web-mode-script-padding 4)
+
+(setq web-mode-extra-snippets
+      '(("php" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
+                  ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")))
+        ("html" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
+                  ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")))
+        ("js" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
+                 ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")))))
 
 (ac-config-default)
 
@@ -159,9 +148,9 @@ With argument, do this that many times."
 
 (setq tabbar-cycle-scope 'tabs)
 (setq tabbar-buffer-groups-function
-	  (lambda ()
-		(let ((dir (expand-file-name default-directory)))
-		  (cond
+      (lambda ()
+        (let ((dir (expand-file-name default-directory)))
+          (cond
            ((string-match-p "\\*.+\\*" (buffer-name))
             (list "#sys"))
            ((string-match-p "/var/www/html/" dir)
@@ -260,3 +249,37 @@ That is, a string used to represent it on the tab bar."
 (set-face-attribute 'font-lock-variable-name-face nil :foreground "#0BAB6E")
 
 (tool-bar-mode -1)
+(put 'downcase-region 'disabled nil)
+
+
+(defun delete-word (arg)
+  "Delete characters forward until encountering the end of a word.
+With argument, do this that many times."
+  (interactive "p")
+  (delete-region (point) (progn (forward-word arg) (point))))
+
+(defun backward-delete-word (arg)
+  "Delete characters backward until encountering the end of a word.
+With argument, do this that many times."
+  (interactive "p")
+  (delete-word (- arg)))
+
+(global-set-key (kbd "<C-backspace>") 'backward-delete-word)
+
+;; Hmm
+(dolist (cmd '(delete-word backward-delete-word))
+  (put cmd 'CUA 'move))
+
+(read-kbd-macro "<C-backspace>")
+
+;; (defun ctrl-back-deletes ()
+;;   (global-set-key (kbd "M-DEL") 'backward-delete-word)
+
+;;   ;; Hmm
+;;   (dolist (cmd '(delete-word backward-delete-word))
+;;     (put cmd 'CUA 'move))
+
+;;   (read-kbd-macro "<M-DEL>"))
+
+;; (add-hook 'web-mode-hook
+;;           'ctrl-back-deletes)
