@@ -125,7 +125,8 @@
 
 (setq web-mode-extra-snippets
       '(("php" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
-                  ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")))
+                  ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
+                  ("need" . "if(!$|->loaded())\n    throw new HTTP_Exception_403();")))
         ("html" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
                   ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")))
         ("js" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
