@@ -58,11 +58,18 @@
 (global-set-key (kbd "C-o") 'find-file)
 (global-set-key (kbd "M-n") 'next-buffer)
 (global-set-key (kbd "M-p") 'previous-buffer)
+(global-set-key (kbd "C-c C-e") 'eval-buffer)
+
 (global-set-key (kbd "C-d")
                 (lambda ()
                   (interactive)
                   (move-beginning-of-line 1)
                   (kill-line)))
+
+(global-set-key (kbd "C-=")
+                (lambda () (interactive) 
+                  (align-regexp (region-beginning) (region-end) "\\(\\s-*\\)=>")))
+
 (global-set-key (kbd "M-x") 'helm-M-x)
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
@@ -94,8 +101,11 @@
      (when (or (> arg 0) (not (bobp)))
        (forward-line)
        (when (or (< arg 0) (not (eobp)))
-            (transpose-lines arg))
-       (forward-line -1)))))
+         (transpose-lines arg))
+       (when (< arg 0)
+         (forward-line -2))
+       (when (> arg 0)
+         (forward-line -1))))))
 
 (defun move-text-down (arg)
    "Move region (transient-mark-mode active) or current line arg lines down."
@@ -251,6 +261,10 @@ That is, a string used to represent it on the tab bar."
 
 (tool-bar-mode -1)
 (put 'downcase-region 'disabled nil)
+
+
+(add-hook 'erc (lambda ()
+                 (add-to-list 'erc-modules 'notifications)))
 
 
 (defun delete-word (arg)
