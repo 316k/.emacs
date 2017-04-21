@@ -8,12 +8,7 @@
 
 (setq load-path
       (cons "~/.emacs.d/my-stuff"
-            (cons "~/g4/share/emacs/site-lisp"
-                  load-path)))
-
-(setq scheme-program-name "~/g4/bin/gsi -:d-")
-(setq gambit-repl-command-prefix "\e")
-(require 'gambit)
+             load-path))
 
 (setq
    backup-by-copying t      ; don't clobber symlinks
@@ -35,7 +30,7 @@
  '(inhibit-startup-screen t)
  '(package-selected-packages
    (quote
-    (julia-shell lua-mode dark-souls flappymacs zone-nyan zone-matrix graphviz-dot-mode xbm-life ducpel nodejs-repl gnuplot gnuplot-mode erc-image php-mode zone-rainbow wolfram-mode web-mode watch-buffer undo-tree take-off tabbar sublimity solarized-theme snippet smooth-scrolling smooth-scroll rings racket-mode paredit nyan-mode nlinum markdown-preview-mode magit lorem-ipsum linear-undo less-css-mode kooten-theme json-mode jasmin helm ham-mode flylisp fireplace fill-column-indicator erc-nick-notify emstar darkokai-theme color-theme-cobalt brainfuck-mode bison-mode auto-shell-command auto-complete-nxml apache-mode ac-php ac-js2 ac-html-bootstrap abyss-theme 2048-game)))
+    (switch-window go-mode sos julia-shell lua-mode dark-souls flappymacs zone-nyan zone-matrix graphviz-dot-mode xbm-life ducpel nodejs-repl gnuplot gnuplot-mode erc-image php-mode zone-rainbow wolfram-mode web-mode watch-buffer undo-tree take-off tabbar sublimity solarized-theme snippet smooth-scrolling smooth-scroll rings racket-mode paredit nyan-mode nlinum markdown-preview-mode magit lorem-ipsum linear-undo less-css-mode kooten-theme json-mode jasmin helm ham-mode flylisp fireplace fill-column-indicator erc-nick-notify emstar darkokai-theme color-theme-cobalt brainfuck-mode bison-mode auto-shell-command auto-complete-nxml apache-mode ac-php ac-js2 ac-html-bootstrap abyss-theme 2048-game)))
  '(tabbar-separator (quote (0.5))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -54,6 +49,13 @@
 
 (setq browse-url-browser-function 'eww-browse-url)
 
+(defun message-a-fortune ()
+  (interactive)
+  (when (executable-find "fortune")
+    (message (with-temp-buffer
+               (shell-command "fortune fortunes" t)
+               (replace-regexp-in-string "[\t\n]+" " " (buffer-string))))))
+
 ;; Cool keybindings
 (global-set-key (kbd "C-S-s") 'isearch-forward)
 (global-set-key (kbd "C-s") 'save-buffer)
@@ -68,8 +70,23 @@
 (global-set-key (kbd "M-p") 'previous-buffer)
 (global-set-key (kbd "C-<prior>") 'previous-buffer)
 (global-set-key (kbd "C-<next>") 'next-buffer)
+(global-set-key (kbd "C-x <left>") 'message-a-fortune)
+(global-set-key (kbd "C-x <right>") 'message-a-fortune)
+
+
 ;; Eval stuff
 (global-set-key (kbd "C-c C-e") 'eval-buffer)
+
+(message "%s" major-mode)
+
+;; artist-mode switch
+(defun switch-to-from-artist-mode ()
+  (interactive)
+  (if (string= major-mode "picture-mode")
+      (artist-mode-off)
+    (artist-mode)))
+
+(global-set-key (kbd "C-c a") 'switch-to-from-artist-mode)
 
 (eval-after-load "python"
   '(progn
@@ -92,7 +109,7 @@
                   (kill-line)))
 
 (global-set-key (kbd "C-=")
-                (lambda () (interactive) 
+                (lambda () (interactive)
                   (align-regexp (region-beginning) (region-end) "\\(\\s-*\\)=>?")))
 
 (global-set-key (kbd "M-x") 'helm-M-x)
@@ -315,10 +332,6 @@ That is, a string used to represent it on the tab bar."
 (put 'downcase-region 'disabled nil)
 
 
-(add-hook 'erc (lambda ()
-                 (add-to-list 'erc-modules 'notifications)))
-
-
 (defun delete-word (arg)
   "Delete characters forward until encountering the end of a word.
 With argument, do this that many times."
@@ -359,18 +372,18 @@ cancel the use of the current buffer (for special-purpose buffers),
 or go back to just one window (by deleting all but the selected window)."
   (interactive)
   (cond ((eq last-command 'mode-exited) nil)
-	((region-active-p)
-	 (deactivate-mark))
-	((> (minibuffer-depth) 0)
-	 (abort-recursive-edit))
-	(current-prefix-arg
-	 nil)
-	((> (recursion-depth) 0)
-	 (exit-recursive-edit))
-	(buffer-quit-function
-	 (funcall buffer-quit-function))
-	((string-match "^ \\*" (buffer-name (current-buffer)))
-	 (bury-buffer))))
+    ((region-active-p)
+     (deactivate-mark))
+    ((> (minibuffer-depth) 0)
+     (abort-recursive-edit))
+    (current-prefix-arg
+     nil)
+    ((> (recursion-depth) 0)
+     (exit-recursive-edit))
+    (buffer-quit-function
+     (funcall buffer-quit-function))
+    ((string-match "^ \\*" (buffer-name (current-buffer)))
+     (bury-buffer))))
 
 (defadvice kill-buffer (around gabc/kill-scracth activate)
   (let ((buffer-to-kill (ad-get-arg 0)))
@@ -381,7 +394,8 @@ or go back to just one window (by deleting all but the selected window)."
 
 ;; (find-file "~/todo.org")
 
-(setq flyspell-issue-welcome-flag nil) ;; fix flyspell problem
+
+;; (setq flyspell-issue-welcome-flag nil) ;; fix flyspell problem
 
 (defadvice show-paren-function
     (after show-matching-paren-offscreen activate)
@@ -394,6 +408,12 @@ or go back to just one window (by deleting all but the selected window)."
                              (char-equal (char-syntax cb) ?\) )
                              (blink-matching-open))))
     (when matching-text (message matching-text))))
+
+(add-hook 'magit-hook
+          (lambda ()
+            (setq magit-git-standard-options
+                  (cons "--no-color"
+                        magit-git-standard-options))))
 
 ;; ---------- Python Session Transcript ----------
 ;; (setq inferior-python-transcript-file nil)
@@ -422,7 +442,7 @@ or go back to just one window (by deleting all but the selected window)."
 ;;               "    __PYTHON_EL_start = n\n"
 ;;               "\n")
 ;;              nil inferior-python-transcript-file)
-            
+
 ;;             (defun python-shell-send-string (string &optional process msg)
 ;;               "Send STRING to inferior Python PROCESS.
 ;; When optional argument MSG is non-nil, forces display of a
@@ -430,11 +450,11 @@ or go back to just one window (by deleting all but the selected window)."
 ;; t when called interactively."
 ;;               (interactive
 ;;                (list (read-string "Python command: ") nil t))
-              
+
 ;;               (when (and (not (string-prefix-p "import codecs, os;__pyfile = codecs.open" string))
 ;;                          (not (string-prefix-p "def __PYDOC_get_help(obj):" string))
 ;;                          (not (string-prefix-p "\ndef __PYTHON_EL_native_completion_setup():" string)))
-                
+
 ;;                 (let* ((real-str (string-remove-prefix "# -*- coding: utf-8 -*-\n" string))
 ;;                        (indent-len (string-match "[[:graph:]]" (string-trim real-str))))
 
@@ -444,7 +464,7 @@ or go back to just one window (by deleting all but the selected window)."
 ;;                                      real-str
 ;;                                      "\n")
 ;;                                     nil inferior-python-transcript-file))))
-              
+
 ;;               (let ((process (or process (python-shell-get-process-or-error msg))))
 ;;                 (if (string-match ".\n+." string)   ;Multiline.
 ;;                     (let* ((temp-file-name (python-shell--save-temp-file string))
