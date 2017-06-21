@@ -30,7 +30,7 @@
  '(inhibit-startup-screen t)
  '(package-selected-packages
    (quote
-    (switch-window go-mode sos julia-shell lua-mode dark-souls flappymacs zone-nyan zone-matrix graphviz-dot-mode xbm-life ducpel nodejs-repl gnuplot gnuplot-mode erc-image php-mode zone-rainbow wolfram-mode web-mode watch-buffer undo-tree take-off tabbar sublimity solarized-theme snippet smooth-scrolling smooth-scroll rings racket-mode paredit nyan-mode nlinum markdown-preview-mode magit lorem-ipsum linear-undo less-css-mode kooten-theme json-mode jasmin helm ham-mode flylisp fireplace fill-column-indicator erc-nick-notify emstar darkokai-theme color-theme-cobalt brainfuck-mode bison-mode auto-shell-command auto-complete-nxml apache-mode ac-php ac-js2 ac-html-bootstrap abyss-theme 2048-game)))
+    (polymode switch-window go-mode sos julia-shell lua-mode dark-souls flappymacs zone-nyan zone-matrix graphviz-dot-mode xbm-life ducpel nodejs-repl gnuplot gnuplot-mode erc-image php-mode zone-rainbow wolfram-mode web-mode watch-buffer undo-tree take-off tabbar sublimity solarized-theme snippet smooth-scrolling smooth-scroll rings racket-mode paredit nyan-mode nlinum markdown-preview-mode magit lorem-ipsum linear-undo less-css-mode kooten-theme json-mode jasmin helm ham-mode flylisp fireplace fill-column-indicator erc-nick-notify emstar darkokai-theme color-theme-cobalt brainfuck-mode bison-mode auto-shell-command auto-complete-nxml apache-mode ac-php ac-js2 ac-html-bootstrap abyss-theme 2048-game)))
  '(tabbar-separator (quote (0.5))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -55,6 +55,7 @@
     (message (with-temp-buffer
                (shell-command "fortune fortunes" t)
                (replace-regexp-in-string "[\t\n]+" " " (buffer-string))))))
+
 
 ;; Cool keybindings
 (global-set-key (kbd "C-S-s") 'isearch-forward)
@@ -177,14 +178,34 @@
 (setq web-mode-style-padding 4)
 (setq web-mode-script-padding 4)
 
-(setq web-mode-extra-snippets
-      '(("php" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
-                  ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
-                  ("need" . "if(!$|->loaded())\n    throw new HTTP_Exception_403();")))
-        ("html" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
-                  ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")))
-        ("js" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
-                 ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")))))
+(let ((table-snippet "
+<table class=\"table table-sorter\">
+    <thead>
+        <tr>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach(): ?>
+            <tr>
+                <td></td>
+                <td></td>
+        </tr>
+        <?php endforeach ?>
+    </tbody>
+</table>
+"))
+  (setq web-mode-extra-snippets
+        `(("php" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
+                    ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
+                    ("need" . "if(!$|->loaded())\n    throw new HTTP_Exception_403();")
+                    ("table" . ,table-snippet)))
+          ("html" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
+                     ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
+                     ("table" . ,table-snippet)))
+          ("js" . (("load" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n")
+                   ("init" . "document.addEventListener('DOMContentLoaded', function() {\n    |\n});\n"))))))
 
 (ac-config-default)
 
@@ -279,6 +300,14 @@ That is, a string used to represent it on the tab bar."
 (define-key global-map [(alt j)] 'tabbar-backward)
 (define-key global-map [(alt k)] 'tabbar-forward)
 
+(add-hook 'org-mode-hook
+          (lambda ()
+            (define-key org-mode-map [M-left] nil)
+            (define-key org-mode-map [M-right] nil)
+
+            (define-key org-mode-map [s-left] 'org-metaleft)
+            (define-key org-mode-map [s-right] 'org-metaright)))
+
 (global-set-key [M-left] 'tabbar-backward-tab)
 (global-set-key [M-right] 'tabbar-forward-tab)
 
@@ -363,6 +392,18 @@ With argument, do this that many times."
 ;; (add-hook 'web-mode-hook
 ;;           'ctrl-back-deletes)
 
+
+;; Fallback on php-mode when files are too big to be handled by web-mode
+;; EWONTFIX : https://github.com/fxbois/web-mode/issues/230
+(defun web-mode-large-php-file-hook ()
+    (when (and (string-suffix-p ".php" (buffer-name))
+                       (> (buffer-size) 18000))
+              (php-mode)))
+
+(add-hook 'web-mode-hook 'web-mode-large-php-file-hook)
+
+
+
 (defun keyboard-escape-quit ()
   "Exit the current \"mode\" (in a generalized sense of the word).
 This command can exit an interactive command such as `query-replace',
@@ -414,6 +455,28 @@ or go back to just one window (by deleting all but the selected window)."
             (setq magit-git-standard-options
                   (cons "--no-color"
                         magit-git-standard-options))))
+
+(defun find-file-upwards (file-to-find)
+  "Recursively searches each parent directory starting from the default-directory.
+looking for a file with name file-to-find.  Returns the path to it
+or nil if not found."
+  (labels
+      ((find-file-r (path)
+                    (let* ((parent (file-name-directory path))
+                           (possible-file (concat parent file-to-find)))
+                      (cond
+                       ((file-exists-p possible-file) possible-file) ; Found
+                       ;; The parent of ~ is nil and the parent of / is itself.
+                       ;; Thus the terminating condition for not finding the file
+                       ;; accounts for both.
+                       ((or (null parent) (equal parent (directory-file-name parent))) nil) ; Not found
+                       (t (find-file-r (directory-file-name parent))))))) ; Continue
+    (find-file-r default-directory)))
+
+;; (let ((my-tags-file (find-file-upwards "TAGS")))
+;;   (when my-tags-file
+;;     (message "Loading tags file: %s" my-tags-file)
+;;     (visit-tags-table my-tags-file)))
 
 ;; ---------- Python Session Transcript ----------
 ;; (setq inferior-python-transcript-file nil)
@@ -489,3 +552,4 @@ or go back to just one window (by deleting all but the selected window)."
 ;;                                nil inferior-python-transcript-file))))
 ;;          str)
 ;;        ))
+(put 'narrow-to-region 'disabled nil)
