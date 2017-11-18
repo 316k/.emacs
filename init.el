@@ -28,9 +28,10 @@
     ("f9574c9ede3f64d57b3aa9b9cef621d54e2e503f4d75d8613cbcc4ca1c962c21" "9ab634dcc9131f79016c96c4955298409649f6538908c743a8a9d2c6bc8321ef" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "1a53efc62256480d5632c057d9e726b2e64714d871e23e43816735e1b85c144c" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" default)))
  '(ede-project-directories (quote ("/home/k/src/tf")))
  '(inhibit-startup-screen t)
+ '(jdee-server-dir "~/.emacs.d/jdee-server/myJars")
  '(package-selected-packages
    (quote
-    (polymode switch-window go-mode sos julia-shell lua-mode dark-souls flappymacs zone-nyan zone-matrix graphviz-dot-mode xbm-life ducpel nodejs-repl gnuplot gnuplot-mode erc-image php-mode zone-rainbow wolfram-mode web-mode watch-buffer undo-tree take-off tabbar sublimity solarized-theme snippet smooth-scrolling smooth-scroll rings racket-mode paredit nyan-mode nlinum markdown-preview-mode magit lorem-ipsum linear-undo less-css-mode kooten-theme json-mode jasmin helm ham-mode flylisp fireplace fill-column-indicator erc-nick-notify emstar darkokai-theme color-theme-cobalt brainfuck-mode bison-mode auto-shell-command auto-complete-nxml apache-mode ac-php ac-js2 ac-html-bootstrap abyss-theme 2048-game)))
+    (zone-select restclient minesweeper jdee roguel-ike java-snippets javarun java-file-create java-imports polymode switch-window go-mode sos julia-shell lua-mode dark-souls flappymacs zone-nyan zone-matrix graphviz-dot-mode xbm-life ducpel nodejs-repl gnuplot gnuplot-mode erc-image php-mode zone-rainbow wolfram-mode web-mode watch-buffer undo-tree take-off tabbar sublimity solarized-theme snippet smooth-scrolling smooth-scroll rings racket-mode paredit nyan-mode nlinum markdown-preview-mode magit lorem-ipsum linear-undo less-css-mode kooten-theme json-mode jasmin helm ham-mode flylisp fireplace fill-column-indicator erc-nick-notify emstar darkokai-theme color-theme-cobalt brainfuck-mode bison-mode auto-shell-command auto-complete-nxml apache-mode ac-php ac-js2 ac-html-bootstrap abyss-theme 2048-game)))
  '(tabbar-separator (quote (0.5))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -53,7 +54,7 @@
   (interactive)
   (when (executable-find "fortune")
     (message (with-temp-buffer
-               (shell-command "fortune fortunes" t)
+               (shell-command "fortune showerthoughts" t)
                (replace-regexp-in-string "[\t\n]+" " " (buffer-string))))))
 
 
@@ -71,14 +72,9 @@
 (global-set-key (kbd "M-p") 'previous-buffer)
 (global-set-key (kbd "C-<prior>") 'previous-buffer)
 (global-set-key (kbd "C-<next>") 'next-buffer)
-(global-set-key (kbd "C-x <left>") 'message-a-fortune)
-(global-set-key (kbd "C-x <right>") 'message-a-fortune)
-
 
 ;; Eval stuff
 (global-set-key (kbd "C-c C-e") 'eval-buffer)
-
-(message "%s" major-mode)
 
 ;; artist-mode switch
 (defun switch-to-from-artist-mode ()
@@ -300,6 +296,18 @@ That is, a string used to represent it on the tab bar."
 (define-key global-map [(alt j)] 'tabbar-backward)
 (define-key global-map [(alt k)] 'tabbar-forward)
 
+;; Unset annoying tabbar bindings
+(global-set-key (kbd "C-x <left>") 'message-a-fortune)
+(global-set-key (kbd "C-x <right>") 'message-a-fortune)
+(global-set-key (kbd "C-x <C-left>") 'message-a-fortune)
+(global-set-key (kbd "C-x <C-right>") 'message-a-fortune)
+
+(define-key tabbar-mode-map (kbd "C-c <C-left>") 'message-a-fortune)
+(define-key tabbar-mode-map (kbd "C-c <C-right>") 'message-a-fortune)
+(define-key tabbar-mode-map (kbd "C-c <C-down>") 'message-a-fortune)
+(define-key tabbar-mode-map (kbd "C-c <C-up>") 'message-a-fortune)
+
+
 (add-hook 'org-mode-hook
           (lambda ()
             (define-key org-mode-map [M-left] nil)
@@ -308,13 +316,26 @@ That is, a string used to represent it on the tab bar."
             (define-key org-mode-map [s-left] 'org-metaleft)
             (define-key org-mode-map [s-right] 'org-metaright)))
 
+
+(add-hook 'markdown-mode-hook
+          (lambda ()
+            (define-key markdown-mode-map [M-left] nil)
+            (define-key markdown-mode-map [M-right] nil)
+
+            (define-key markdown-mode-map [s-left] 'markdown-promote)
+            (define-key markdown-mode-map [s-right] 'markdown-demote)))
+
+
+
 (global-set-key [M-left] 'tabbar-backward-tab)
 (global-set-key [M-right] 'tabbar-forward-tab)
 
+(load-file "~/.emacs.d/my-stuff/live-render-mode.el")
 
 (load-file "~/.emacs.d/my-stuff/special-chars.el")
 (global-set-key (kbd "C-c C-M-c") 'word-to-special-char)
 (global-set-key (kbd "s-v") 'word-to-special-char)
+
 
 (setq-default markdown-preview-style "http://localhost/md-style.css")
 
@@ -352,6 +373,8 @@ That is, a string used to represent it on the tab bar."
 (add-to-list 'auto-mode-alist '("\\.mu\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+
+(add-to-list 'auto-mode-alist '("\\.cash\\'" . live-render-mode))
 
 (load-theme 'abyss)
 (set-face-attribute 'font-lock-string-face nil :foreground "#9944FD")
@@ -396,9 +419,10 @@ With argument, do this that many times."
 ;; Fallback on php-mode when files are too big to be handled by web-mode
 ;; EWONTFIX : https://github.com/fxbois/web-mode/issues/230
 (defun web-mode-large-php-file-hook ()
-    (when (and (string-suffix-p ".php" (buffer-name))
-                       (> (buffer-size) 18000))
-              (php-mode)))
+  (when (and (string-suffix-p ".php" (buffer-name))
+             (> (buffer-size) 18000)
+             (y-or-n-p "Large PHP file detected, use php-mode ?"))
+    (php-mode)))
 
 (add-hook 'web-mode-hook 'web-mode-large-php-file-hook)
 
@@ -432,6 +456,21 @@ or go back to just one window (by deleting all but the selected window)."
         ;; (bury-buffer)
         (error "Can't kill scratch")
       ad-do-it)))
+
+;; Don't ask confirmation for every (saved) matching buffer
+(defun kill-matching-buffers (regexp &optional internal-too)
+  "Kill buffers whose name matches the specified REGEXP.
+The optional second argument indicates whether to kill internal buffers too."
+  (interactive "sKill buffers matching this regular expression: \nP")
+  (dolist (buffer (buffer-list))
+    (let ((name (buffer-name buffer)))
+      (when (and name (not (string-equal name ""))
+                 (or internal-too (/= (aref name 0) ?\s))
+                 (string-match regexp name))
+        (if (buffer-modified-p buffer)
+            (kill-buffer-ask buffer)
+          (kill-buffer buffer))))))
+
 
 ;; (find-file "~/todo.org")
 
@@ -553,3 +592,9 @@ or nil if not found."
 ;;          str)
 ;;        ))
 (put 'narrow-to-region 'disabled nil)
+
+(global-set-key
+ (kbd "M-j")
+ (lambda ()
+   (interactive)
+   (insert "// CORRECTEUR : ")))
