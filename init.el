@@ -4,7 +4,7 @@
                          ("marmalade" . "http://marmalade-repo.org/packages/")
                          ("melpa" . "http://melpa.milkbox.net/packages/")))
 
-(package-initialize)
+; (package-initialize)
 
 (setq load-path
       (cons "~/.emacs.d/my-stuff"
@@ -18,21 +18,23 @@
    kept-old-versions 2
    version-control t)       ; use versioned backups
 
+;; no wonky
+;; (setq ispell-list-command "--list")
+
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   (quote
-    ("f9574c9ede3f64d57b3aa9b9cef621d54e2e503f4d75d8613cbcc4ca1c962c21" "9ab634dcc9131f79016c96c4955298409649f6538908c743a8a9d2c6bc8321ef" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "1a53efc62256480d5632c057d9e726b2e64714d871e23e43816735e1b85c144c" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" default)))
- '(ede-project-directories (quote ("/home/k/src/tf")))
+   '("d8dc153c58354d612b2576fea87fe676a3a5d43bcc71170c62ddde4a1ad9e1fb" "f9574c9ede3f64d57b3aa9b9cef621d54e2e503f4d75d8613cbcc4ca1c962c21" "9ab634dcc9131f79016c96c4955298409649f6538908c743a8a9d2c6bc8321ef" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "1a53efc62256480d5632c057d9e726b2e64714d871e23e43816735e1b85c144c" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" default))
+ '(ede-project-directories '("/home/k/src/tf"))
  '(inhibit-startup-screen t)
  '(jdee-server-dir "~/.emacs.d/jdee-server/myJars")
  '(package-selected-packages
-   (quote
-    (zone-select restclient minesweeper jdee roguel-ike java-snippets javarun java-file-create java-imports polymode switch-window go-mode sos julia-shell lua-mode dark-souls flappymacs zone-nyan zone-matrix graphviz-dot-mode xbm-life ducpel nodejs-repl gnuplot gnuplot-mode erc-image php-mode zone-rainbow wolfram-mode web-mode watch-buffer undo-tree take-off tabbar sublimity solarized-theme snippet smooth-scrolling smooth-scroll rings racket-mode paredit nyan-mode nlinum markdown-preview-mode magit lorem-ipsum linear-undo less-css-mode kooten-theme json-mode jasmin helm ham-mode flylisp fireplace fill-column-indicator erc-nick-notify emstar darkokai-theme color-theme-cobalt brainfuck-mode bison-mode auto-shell-command auto-complete-nxml apache-mode ac-php ac-js2 ac-html-bootstrap abyss-theme 2048-game)))
- '(tabbar-separator (quote (0.5))))
+   '(processing-mode ialign glsl-mode scratch-ext scad-mode c-eldoc diff-hl midi-kbd srefactor unfill zone-select restclient minesweeper roguel-ike java-snippets javarun java-file-create java-imports polymode switch-window go-mode sos julia-shell lua-mode dark-souls flappymacs zone-nyan zone-matrix graphviz-dot-mode xbm-life ducpel nodejs-repl gnuplot gnuplot-mode erc-image php-mode zone-rainbow wolfram-mode web-mode watch-buffer undo-tree take-off tabbar sublimity solarized-theme snippet smooth-scrolling smooth-scroll rings racket-mode paredit nyan-mode nlinum markdown-preview-mode magit lorem-ipsum linear-undo less-css-mode kooten-theme json-mode jasmin helm ham-mode flylisp fireplace fill-column-indicator erc-nick-notify emstar darkokai-theme color-theme-cobalt brainfuck-mode bison-mode auto-shell-mand auto-complete-nxml apache-mode ac-php ac-js2 ac-html-bootstrap abyss-theme 2048-game))
+ '(tabbar-separator '(0.5)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -73,6 +75,8 @@
 (global-set-key (kbd "C-<prior>") 'previous-buffer)
 (global-set-key (kbd "C-<next>") 'next-buffer)
 
+(global-set-key (kbd "M-<f12>") 'whitespace-cleanup)
+
 ;; Eval stuff
 (global-set-key (kbd "C-c C-e") 'eval-buffer)
 
@@ -84,6 +88,18 @@
     (artist-mode)))
 
 (global-set-key (kbd "C-c a") 'switch-to-from-artist-mode)
+
+(global-set-key (kbd "C-<")
+                (lambda ()
+                  (interactive)
+                  (dotimes (i 4)
+                    (indent-rigidly-left (region-beginning) (region-end)))))
+
+(global-set-key (kbd "C->")
+                (lambda ()
+                  (interactive)
+                  (dotimes (i 4)
+                    (indent-rigidly-right (region-beginning) (region-end)))))
 
 (eval-after-load "python"
   '(progn
@@ -97,6 +113,35 @@
 
 (eval-after-load "sql"
   '(define-key sql-mode-map [(control c) (kbd "RET")] 'sql-send-region))
+
+(eval-after-load "jdee"
+  '(progn
+     (define-key jdee-mode-map (kbd "C-SPC") 'jdee-complete)
+     (define-key jdee-mode-map [(control c) (kbd "RET")] 'sql-send-region)))
+
+(add-hook
+ 'java-mode-hook
+ (lambda ()
+   (define-key java-mode-map [f5] 'javarun)
+   (javarun-mode 1)))
+
+
+(defun java-scratch ()
+  (interactive)
+
+  (let ((buf (generate-new-buffer "/tmp/Scratch.java")))
+    (switch-to-buffer buf)
+    (java-mode)
+    (write-file "/tmp/Scratch.java")
+    (insert "class Scratch {
+
+    public static void main(String[] args) {
+
+        System.out.println(\"wat\");
+
+    }
+
+}")))
 
 ;; Funky stuff
 (global-set-key (kbd "C-d")
@@ -307,7 +352,6 @@ That is, a string used to represent it on the tab bar."
 (define-key tabbar-mode-map (kbd "C-c <C-down>") 'message-a-fortune)
 (define-key tabbar-mode-map (kbd "C-c <C-up>") 'message-a-fortune)
 
-
 (add-hook 'org-mode-hook
           (lambda ()
             (define-key org-mode-map [M-left] nil)
@@ -397,6 +441,7 @@ With argument, do this that many times."
   (delete-word (- arg)))
 
 (global-set-key (kbd "<C-backspace>") 'backward-delete-word)
+(global-set-key (kbd "C-SPC") 'dabbrev-expand)
 
 ;; Hmm
 (dolist (cmd '(delete-word backward-delete-word))
@@ -512,6 +557,10 @@ or nil if not found."
                        (t (find-file-r (directory-file-name parent))))))) ; Continue
     (find-file-r default-directory)))
 
+(add-hook 'c-mode-hook 'c-turn-on-eldoc-mode)
+
+(global-diff-hl-mode t)
+
 ;; (let ((my-tags-file (find-file-upwards "TAGS")))
 ;;   (when my-tags-file
 ;;     (message "Loading tags file: %s" my-tags-file)
@@ -593,8 +642,32 @@ or nil if not found."
 ;;        ))
 (put 'narrow-to-region 'disabled nil)
 
+(defun align-repeat (start end regexp)
+  "Repeat alignment with respect to
+     the given regular expression."
+  (interactive "r\nsAlign regexp: ")
+  (align-regexp start end
+                (concat "\\(\\s-*\\)" regexp) 1 1 t))
+
+(setq processing-location "/home/k/src/processing-3.4/processing-java")
+
+;; (add-hook 'processing-mode-hook
+;;           (lambda ()
+;;             (define-key processing-mode-map [(control c) (control c)] 'processing-sketch-run)))
+
+;; Correction
+
+;; (global-set-key
+;;  (kbd "M-j")
+;;  (lambda ()
+;;    (interactive)
+;;    (insert "// CORRECTEUR : ")))
+
 (global-set-key
  (kbd "M-j")
  (lambda ()
    (interactive)
-   (insert "// CORRECTEUR : ")))
+   (save-excursion
+     (beginning-of-buffer)
+     (align-repeat (region-beginning) (region-end) ",")
+     (hl-line-mode t))))

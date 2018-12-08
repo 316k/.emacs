@@ -110,7 +110,29 @@
                 (subj ⱼ)
                 (subk ₖ)
                 (subl ₗ)
+                (grad ∇)
+                (gradient ∇)
+                (laplacian △)
+                (lapl △)
+                (triangle △)
                 )))
+
+
+(defun word-to-special-char-best-match (pattern)
+  "Finds the longest special-char found in pattern"
+  (cl-reduce
+   (lambda (best-pair special-char-pair)
+     (let ((char (symbol-name (car special-char-pair)))
+           (symbol (cdr special-char-pair))
+           (case-fold-search nil))
+       (let ((pos (string-match-p (regexp-quote char) pattern)))
+         (if (and pos
+                  (> (length char) (cadr best-pair)))
+             (progn (message "%s" char)
+                    (list (length char) pos char symbol))
+           best-pair))))
+   special-chars
+   :initial-value '(0 0 "" "")))
 
 (defun word-to-special-char ()
   "Transforms an ASCII word into an UTF-8 symbol"
@@ -121,12 +143,16 @@
             (thing (thing-at-point 'word)))
         (delete-region (car bounds) (cdr bounds))
         (goto-char (car bounds))
+
         (let ((char (alist-get (intern thing) special-chars thing)))
-
-          (when (eq char thing)
-            (message "Not found : %s" thing))
-
+          (when (eq char thing) ;; thing-at-point is not a known symbol
+            (let* ((best-match (word-to-special-char-best-match thing))
+                   (word (caddr best-match)))
+              (if (string= word "")
+                  (message "No such special char: %s" thing)
+                ;; Try to replace in substring
+                (setq char (replace-regexp-in-string (regexp-quote word) (cadddr best-match) thing)))))
           (insert char)
-          (setq len (length char))
-          )))
+          (setq len (length char)))))
     (forward-char len)))
+
